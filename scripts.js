@@ -33,8 +33,8 @@ function verificarPlaca() {
     });
 }
 
-// Permitir que se ejecute al presionar Enter
+// Agregar el evento 'submit' al formulario
 document.getElementById("formulario").addEventListener("submit", function(e) {
-  e.preventDefault();
-  verificarPlaca();
+  e.preventDefault();  // Evita que la página se recargue
+  verificarPlaca();    // Llama a la función para verificar la placa
 });
