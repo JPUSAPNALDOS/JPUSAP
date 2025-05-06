@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -7,14 +8,14 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
- <div class="contenedor">
-  <h1>Verificación de Aportante</h1>
-  <form onsubmit="verificarPlaca(); return false;">
-    <input type="text" id="placaInput" placeholder="Digita la placa" />
-    <button type="submit">Verificar</button>
-  </form>
-  <div id="resultado"></div>
-</div>
+  <div class="contenedor">
+    <h1>Verificación de Aportante</h1>
+    <form id="formulario">
+      <input type="text" id="placaInput" placeholder="Digita la placa" />
+      <button type="submit">Verificar</button>
+    </form>
+    <div id="resultado"></div>
+  </div>
 
   <!-- Vinculamos el archivo JavaScript -->
   <script src="scripts.js"></script>
