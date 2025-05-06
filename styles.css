@@ -1,40 +1,65 @@
+/* Modo claro por defecto */
 body {
-  background-color: #f4f4f4;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding-top: 50px;
+  background-color: #ffffff; /* Fondo blanco */
+  color: #000000; /* Texto negro */
+  font-family: Arial, sans-serif; /* Fuente */
+  transition: background-color 0.3s, color 0.3s; /* Transición suave al cambiar de modo */
 }
 
+/* Modo oscuro */
+body.dark-mode {
+  background-color: #333333; /* Fondo oscuro */
+  color: #ffffff; /* Texto blanco */
+}
+
+/* Estilo del botón en modo oscuro */
+button.dark-mode {
+  background-color: #555555; /* Botón gris oscuro */
+  color: #ffffff; /* Texto blanco */
+}
+
+/* Estilo del contenedor */
 .contenedor {
-  background-color: white;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-  width: 90%;
-  max-width: 400px;
-  margin: auto;
+  text-align: center;
+  padding: 20px;
+  margin-top: 20px;
 }
 
-input {
-  width: 80%;
+/* Estilo de los inputs */
+input[type="text"] {
   padding: 10px;
-  margin-top: 10px;
-  font-size: 18px;
+  margin: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
+/* Estilo del botón */
 button {
   padding: 10px 20px;
-  font-size: 18px;
-  margin-top: 10px;
+  font-size: 16px;
   cursor: pointer;
-  background-color: #0066cc;
-  color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+/* Estilos para el resultado */
+#resultado {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+/* Estilo para botones en modo oscuro */
+button.dark-mode:hover {
+  background-color: #777777; /* Cambio de color al pasar el mouse */
 }
 
 #resultado {
-  margin-top: 20px;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
 }
+
+/* Añadir más estilos según sea necesario */
