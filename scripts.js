@@ -1,4 +1,4 @@
-const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // <- Tu API Key real
+const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // Tu API Key
 const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
 const sheetName = "VERIFICACION";
 
@@ -33,16 +33,16 @@ function verificarPlaca() {
     });
 }
 
-// Se agrega el evento 'keydown' para escuchar la tecla ENTER
+// Añadir un evento para capturar el 'Enter' al presionar la tecla
 document.getElementById("placaInput").addEventListener("keydown", function(event) {
   if (event.key === "Enter") {
-    event.preventDefault();  // Evita que el formulario se envíe
+    event.preventDefault();  // Evita que el formulario se envíe o recargue la página
     verificarPlaca();        // Llama a la función para verificar la placa
   }
 });
 
-// Se puede quitar el 'onsubmit' en el formulario para evitar conflictos con el evento ENTER
+// Añadir un evento 'submit' al formulario para cuando se haga click en el botón
 document.getElementById("formulario").addEventListener("submit", function(e) {
-  e.preventDefault();  // Evita la recarga de la página
+  e.preventDefault();  // Evita que la página se recargue al enviar el formulario
   verificarPlaca();    // Llama a la función para verificar la placa
 });
