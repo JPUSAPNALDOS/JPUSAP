@@ -1,3 +1,8 @@
+const toggleButton = document.getElementById('toggleMode');
+toggleButton.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+});
+
 const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // Tu API Key
 const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
 const sheetName = "VERIFICACION";
