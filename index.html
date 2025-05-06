@@ -8,12 +8,13 @@
 </head>
 <body>
   <div class="contenedor">
-    <h1>Verificación de Aportante</h1>
+  <h1>Verificación de Aportante</h1>
+  <form onsubmit="verificarPlaca(); return false;">
     <input type="text" id="placaInput" placeholder="Digita la placa" />
-    <button onclick="verificarPlaca()">Verificar</button>
-    <div id="resultado"></div>
-  </div>
-
+    <button type="submit">Verificar</button>
+  </form>
+  <div id="resultado"></div>
+</div>
   <!-- Vinculamos el archivo JavaScript -->
   <script src="scripts.js"></script>
 </body>
