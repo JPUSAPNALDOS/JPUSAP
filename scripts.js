@@ -1,4 +1,4 @@
-const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // <- Reemplaza esto con tu clave real
+const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // <- Tu API Key real
 const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
 const sheetName = "VERIFICACION";
 
@@ -32,3 +32,9 @@ function verificarPlaca() {
       document.getElementById("resultado").style.color = "red";
     });
 }
+
+// Permitir que se ejecute al presionar Enter
+document.getElementById("formulario").addEventListener("submit", function(e) {
+  e.preventDefault();
+  verificarPlaca();
+});
