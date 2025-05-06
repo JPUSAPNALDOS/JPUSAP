@@ -1,10 +1,7 @@
-console.log("Archivo JavaScript cargado correctamente");
-
-const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // Tu API Key real
+const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // <- Tu API Key real
 const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
 const sheetName = "VERIFICACION";
 
-// Función para verificar la placa
 function verificarPlaca() {
   const placaIngresada = document.getElementById("placaInput").value.trim().toUpperCase();
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
@@ -36,16 +33,16 @@ function verificarPlaca() {
     });
 }
 
-// Agregar el evento 'submit' al formulario para el clic del botón
-document.getElementById("formulario").addEventListener("submit", function(e) {
-  e.preventDefault();  // Evita que la página se recargue
-  verificarPlaca();    // Llama a la función para verificar la placa
-});
-
-// Agregar el evento 'keydown' al campo de texto para presionar Enter
+// Se agrega el evento 'keydown' para escuchar la tecla ENTER
 document.getElementById("placaInput").addEventListener("keydown", function(event) {
   if (event.key === "Enter") {
-    event.preventDefault();  // Evita que se envíe el formulario al presionar Enter
-    verificarPlaca();        // Ejecuta la función de verificación
+    event.preventDefault();  // Evita que el formulario se envíe
+    verificarPlaca();        // Llama a la función para verificar la placa
   }
+});
+
+// Se puede quitar el 'onsubmit' en el formulario para evitar conflictos con el evento ENTER
+document.getElementById("formulario").addEventListener("submit", function(e) {
+  e.preventDefault();  // Evita la recarga de la página
+  verificarPlaca();    // Llama a la función para verificar la placa
 });
