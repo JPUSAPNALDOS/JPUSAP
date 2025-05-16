@@ -5,18 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verificación de Aportante</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Actualizamos la ruta al archivo JS -->
-  <script defer src="scripts.js"></script>
+  <script defer src="script.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <div class="contenedor">
     <h1>Verificación de Aportante</h1>
-    <input type="text" id="placaInput" placeholder="Digita la placa">
-    <button id="verificarBtn">
-      <i class="fas fa-search"></i> Verificar
-    </button>
-    <div id="resultado"></div>
+    
+    <!-- Controles de pestañas -->
+    <div class="tabs">
+      <div class="tab active" data-target="verificacion">Verificación</div>
+      <div class="tab" data-target="estadoDeuda">Estado de Deuda</div>
+    </div>
+    
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content">
+      <!-- Pestaña de Verificación (contenido original) -->
+      <div id="verificacion" class="contenido-tab active">
+        <input type="text" id="placaInput" placeholder="Digita la placa">
+        <button onclick="verificarPlaca()">
+          <i class="fas fa-search"></i> Verificar
+        </button>
+        <div id="resultado"></div>
+      </div>
+      
+      <!-- Pestaña de Estado de Deuda -->
+      <div id="estadoDeuda" class="contenido-tab">
+        <h2>Estado de Deuda</h2>
+        <p><strong>Dirección:</strong></p>
+        <p>Mz: <input type="text" id="mz" placeholder="Ingrese Mz"></p>
+        <p>Lote: <input type="text" id="lote" placeholder="Ingrese Lote"></p>
+        <p>Etapa: <input type="text" id="etapa" placeholder="Ingrese Etapa"></p>
+        <p>
+          <strong>Meses Adeudados:</strong>
+          <input type="text" id="mesesAdeudados" placeholder="Meses Adeudados" readonly>
+        </p>
+        <button onclick="verificarDeuda()">Verificar Deuda</button>
+      </div>
+    </div>
   </div>
+  
+  <!-- Script para el manejo de las pestañas -->
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const contenidos = document.querySelectorAll('.contenido-tab');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function () {
+        // Quitar la clase active de todas las pestañas y contenidos
+        tabs.forEach(t => t.classList.remove('active'));
+        contenidos.forEach(c => c.classList.remove('active'));
+        
+        // Agregar la clase active a la pestaña clickeada
+        this.classList.add('active');
+        
+        // Mostrar el contenido correspondiente
+        const target = this.getAttribute('data-target');
+        if (target) {
+          const content = document.getElementById(target);
+          if (content) content.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
