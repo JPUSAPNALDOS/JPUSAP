@@ -1,65 +1,76 @@
-/* Modo claro por defecto */
 body {
-  background-color: #ffffff; /* Fondo blanco */
-  color: #000000; /* Texto negro */
-  font-family: Arial, sans-serif; /* Fuente */
-  transition: background-color 0.3s, color 0.3s; /* Transición suave al cambiar de modo */
-}
-
-/* Modo oscuro */
-body.dark-mode {
-  background-color: #333333; /* Fondo oscuro */
-  color: #ffffff; /* Texto blanco */
-}
-
-/* Estilo del botón en modo oscuro */
-button.dark-mode {
-  background-color: #555555; /* Botón gris oscuro */
-  color: #ffffff; /* Texto blanco */
-}
-
-/* Estilo del contenedor */
-.contenedor {
+  background-color: #f4f4f4;
+  font-family: 'Poppins', sans-serif;
   text-align: center;
-  padding: 20px;
-  margin-top: 20px;
+  padding-top: 50px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Estilo de los inputs */
-input[type="text"] {
-  padding: 10px;
-  margin: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Estilo del botón */
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
+.contenedor {
+  background-color: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 400px;
+  margin: auto;
   transition: background-color 0.3s;
 }
 
-/* Estilos para el resultado */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 20px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 15px 25px;
+  font-size: 22px;
+  margin-top: 10px;
+  cursor: pointer;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.3s;
+}
+
+button i {
+  font-size: 26px;
+}
+
 #resultado {
   margin-top: 20px;
-  font-size: 18px;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-/* Estilo para botones en modo oscuro */
-button.dark-mode:hover {
-  background-color: #777777; /* Cambio de color al pasar el mouse */
-}
-
-#resultado {
-  font-size: 18px;
+  font-size: 26px;
   font-weight: bold;
 }
 
-/* Añadir más estilos según sea necesario */
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #f4f4f4;
+  }
+
+  .contenedor {
+    background-color: #333;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  }
+
+  input {
+    background-color: #444;
+    color: white;
+    border: 1px solid #666;
+  }
+
+  button {
+    background-color: #0084ff;
+  }
+}
