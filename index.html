@@ -5,18 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verificación de Aportante</title>
   <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <button id="toggleMode">Modo Oscuro</button>
   <div class="contenedor">
     <h1>Verificación de Aportante</h1>
-    <form id="formulario">
-      <input type="text" id="placaInput" placeholder="Digita la placa" />
-      <button type="submit">Verificar</button>
-    </form>
+    <input type="text" id="placaInput" placeholder="Digita la placa">
+    <button onclick="verificarPlaca()">
+      <i class="fas fa-search"></i> Verificar
+    </button>
     <div id="resultado"></div>
   </div>
-
-  <script src="scripts.js"></script>
 </body>
 </html>
