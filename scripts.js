@@ -1,6 +1,10 @@
-const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ"; // Verifica que este ID sea el correcto
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("verificarBtn").onclick = verificarPlaca;
+});
+
+const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
 const sheetName = "VERIFICACION";
-const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // Asegúrate de que sea una clave válida
+const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; 
 
 function verificarPlaca() {
   const placaInput = document.getElementById("placaInput");
