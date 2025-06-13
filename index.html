@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Verificación de Aportante</title>
   <link rel="stylesheet" href="styles.css"/>
@@ -39,16 +39,8 @@
     <!-- Contenido de las pestañas -->
     <div class="tab-content">
       <!-- Pestaña Verificación de placa -->
-      <section
-        id="verificacion"
-        class="contenido-tab active"
-        role="tabpanel"
-      >
-        <input
-          type="text"
-          id="placaInput"
-          placeholder="Digita la placa"
-        />
+      <section id="verificacion" class="contenido-tab active" role="tabpanel">
+        <input type="text" id="placaInput" placeholder="Digita la placa"/>
         <button onclick="verificarPlaca()">
           <i class="fas fa-search"></i> Verificar
         </button>
@@ -57,12 +49,7 @@
       </section>
 
       <!-- Pestaña Estado de Deuda -->
-      <section
-        id="estadoDeuda"
-        class="contenido-tab"
-        role="tabpanel"
-        hidden
-      >
+      <section id="estadoDeuda" class="contenido-tab" role="tabpanel" hidden>
         <h2>Estado de Deuda</h2>
         <p>Mz:   <input type="text" id="mz" placeholder="Ingrese Mz"/></p>
         <p>Lote: <input type="text" id="lote" placeholder="Ingrese Lote"/></p>
@@ -81,42 +68,23 @@
       </section>
 
       <!-- Pestaña Verificación DNI -->
-      <section
-        id="verificacionDni"
-        class="contenido-tab"
-        role="tabpanel"
-        hidden
-      >
+      <section id="verificacionDni" class="contenido-tab" role="tabpanel" hidden>
         <h2>Verificación por DNI</h2>
-
-        <!-- Input manual -->
-        <input
-          type="text"
-          id="dniInput"
-          placeholder="Digita número de DNI"
-        />
+        <input type="text" id="dniInput" placeholder="Digita número de DNI"/>
         <button id="btnVerificarDni">Verificar DNI</button>
-
-        <!-- Botón de escáner -->
         <button id="btnActivateCam">📷 Activar Cámara</button>
-
-        <!-- Botón Limpiar -->
         <button class="btn-clear">Limpiar</button>
-
-        <!-- Área donde se montará la cámara -->
         <div
           id="reader"
           style="display:none; width:300px; height:200px; margin:1rem auto;"
         ></div>
-
-        <!-- Resultado DNI -->
         <div id="resultadoDni"></div>
       </section>
     </div>
   </main>
 
-  <!-- Librería de escaneo de QR/DNI -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.6/html5-qrcode.min.js"></script>
+  <!-- Librería ZXing para escanear PDF417/barcodes de DNI -->
+  <script src="https://unpkg.com/@zxing/library@0.18.6"></script>
   <!-- Tu script principal -->
   <script src="scripts.js" defer></script>
 
