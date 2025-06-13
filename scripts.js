@@ -197,41 +197,51 @@ function buscarDni(dni) {
 // ——————————————————————————————————
 // Barcode/PDF417 con ZXing
 // ——————————————————————————————————
-function startDniScan() {
+async function startDniScan() {
   const readerEl = document.getElementById("reader");
   readerEl.style.display = "block";
 
-  // Creamos el lector multi‐formato
-  const codeReader = new ZXing.BrowserMultiFormatReader();
-  // Escuchamos la primera cámara disponible
-  codeReader.getVideoInputDevices()
-    .then(videoInputDevices => {
-      const firstDeviceId = videoInputDevices[0]?.deviceId;
-      if (!firstDeviceId) throw new Error("No hay cámara disponible");
+  // 1) Pedimos permiso explícito
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
+  } catch (permErr) {
+    console.error("Permiso denegado o falló getUserMedia:", permErr);
+    alert("No permitiste acceso a cámara");
+    readerEl.style.display = "none";
+    return;
+  }
 
-      // Iniciamos streaming + decodificación continua
-      codeReader.decodeFromVideoDevice(
-        firstDeviceId,
-        "reader",
-        { 
-          // Opcional: puedes especificar solo PDF_417 y Code_128
-          formats: [ZXing.BarcodeFormat.PDF_417, ZXing.BarcodeFormat.CODE_128] 
-        },
-        (result, err) => {
-          if (result) {
-            // Tenemos el texto decodificado
-            codeReader.reset();
-            readerEl.style.display = "none";
-            document.getElementById("dniInput").value = result.getText();
-            buscarDni(result.getText());
-          }
-          // errores de frame ignoramos
+  // 2) Enumeramos dispositivos y vemos en consola
+  const cams = (await navigator.mediaDevices.enumerateDevices())
+                .filter(dev => dev.kind === "videoinput");
+  console.log("Cámaras detectadas:", cams);
+  if (!cams.length) {
+    alert("No se encontró ninguna cámara");
+    readerEl.style.display = "none";
+    return;
+  }
+
+  // 3) Instanciamos ZXing y arrancamos el escaneo en el div#reader
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+  codeReader
+    .decodeFromVideoDevice(
+      /* deviceId null = default camera */ null,
+      "reader",
+      (result, err) => {
+        if (result) {
+          console.log("Código leído:", result.getText());
+          codeReader.reset();
+          readerEl.style.display = "none";
+          document.getElementById("dniInput").value = result.getText();
+          buscarDni(result.getText());
         }
-      );
-    })
-    .catch(err => {
-      console.error("ZXing error:", err);
-      alert("No se pudo iniciar el escáner de barras: " + err.message);
+        // los errores de frame llegan aquí, los ignoramos
+      }
+    )
+    .catch(scanErr => {
+      console.error("Error al iniciar ZXing:", scanErr);
+      alert("No se pudo arrancar el escáner: " + scanErr.message);
+      readerEl.style.display = "none";
     });
 }
 
