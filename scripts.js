@@ -18,10 +18,17 @@ const apiKey    = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE";
 const tabs       = document.querySelectorAll('.tab');
 const contenidos = document.querySelectorAll('.contenido-tab');
 tabs.forEach(tab => tab.addEventListener('click', function(){
+  // togglear pestañas
   tabs.forEach(t => t.classList.remove('active'));
   contenidos.forEach(c => c.classList.remove('active'));
   this.classList.add('active');
   document.getElementById(this.dataset.target).classList.add('active');
+  // ocultar siempre el scanner al cambiar de pestaña
+  const sc = document.getElementById('scanner-container');
+  if (sc) {
+    sc.classList.remove('visible', 'detected', 'error');
+    document.getElementById('reader').style.display = 'none';
+  }
 }));
 
 // ——— Función para verificar por placa ———
@@ -45,8 +52,6 @@ function verificarPlaca() {
     .then(data => {
       if (!data.values || !data.values.length) throw new Error("Hoja vacía");
       const filas = data.values;
-      
-      // Valores por defecto
       let estado = "NO ENCONTRADO",
           cuenta = "SIN DATOS",
           mz = "", lote = "", etapa = "", meses = "";
@@ -63,7 +68,6 @@ function verificarPlaca() {
         }
       }
       
-      // Mostrar en “Verificación”
       resultadoDiv.innerHTML = `
         <span id="estadoSpan">🔍 Estado: ${estado}</span><br>
         <span id="estadoCuentaSpan">💰 Estado de Cuenta: ${cuenta}</span>
@@ -73,7 +77,6 @@ function verificarPlaca() {
       document.getElementById("estadoCuentaSpan")
               .style.color = (cuenta==="ESTABLE"?"green":cuenta==="RETRASO DE DEUDA"?"red":"black");
       
-      // Rellenar “Estado de Deuda”
       document.getElementById("mz").value             = mz;
       document.getElementById("lote").value           = lote;
       document.getElementById("etapa").value          = etapa;
@@ -139,24 +142,23 @@ document.querySelectorAll('.btn-clear').forEach(btn => {
     if (!panel) return;
     panel.querySelectorAll('input').forEach(i => i.value = '');
     document.getElementById('resultado').textContent = '';
+    document.getElementById('resultadoDni').textContent = '';
   });
 });
 
 // —————————————————————————————————————————
-// 1) Config para la nueva hoja de DNI
+// 1) Config para la hoja de DNI
 // —————————————————————————————————————————
-const dniSheetName = "RESIDENTES";    // nombre exacto de la pestaña con DNI|Residente|Aportante
+const dniSheetName = "RESIDENTES";
 
 // —————————————————————————————————————————
-// 2) Función que consulta SEL DNI (hoja RESIDENTES)
+// 2) Función para consultar DNI en Google Sheets
 // —————————————————————————————————————————
 function buscarDni(dni) {
   const resDiv = document.getElementById("resultadoDni");
   resDiv.textContent = "Buscando…";
   
-  fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${dniSheetName}?key=${apiKey}`
-  )
+  fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${dniSheetName}?key=${apiKey}`)
     .then(r => {
       if (!r.ok) throw new Error(r.statusText);
       return r.json();
@@ -170,11 +172,9 @@ function buscarDni(dni) {
         return;
       }
       
-      // Lectura de columnas: [0]=DNI, [1]=Residente, [2]=Aportante
       const esResidente  = (fila[1]||"").toUpperCase() === "SI";
       const esAportante  = (fila[2]||"").toUpperCase() === "SI";
       
-      // Mostrar resultado
       resDiv.innerHTML = `
         <span style="color:${esResidente?"green":"red"}">
           ${ esResidente ? "✅ Es residente" : "❌ No es residente" }
@@ -192,56 +192,54 @@ function buscarDni(dni) {
 }
 
 // —————————————————————————————————————————
-// **NUEVO**: Función para activar cámara y escanear DNI
+// 3) startDniScan con feedback en tiempo real
 // —————————————————————————————————————————
-// ——————————————————————————————————
-// Barcode/PDF417 con ZXing
-// ——————————————————————————————————
 async function startDniScan() {
+  const cont     = document.getElementById("scanner-container");
   const readerEl = document.getElementById("reader");
-  readerEl.style.display = "block";
+  const fb       = document.getElementById("scanFeedback");
 
-  // 1) Pedimos permiso explícito
+  // UI inicial: mostrar contenedor
+  cont.classList.add("visible");
+  readerEl.style.display = "block";
+  cont.classList.remove("detected", "error");
+  fb.textContent = "Buscando…";
+
+  // Pide permiso
   try {
     await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
-  } catch (permErr) {
-    console.error("Permiso denegado o falló getUserMedia:", permErr);
-    alert("No permitiste acceso a cámara");
-    readerEl.style.display = "none";
+  } catch (err) {
+    cont.classList.add("error");
+    fb.textContent = "Permiso denegado";
+    setTimeout(()=> cont.classList.remove("visible"), 1000);
     return;
   }
 
-  // 2) Enumeramos dispositivos y vemos en consola
-  const cams = (await navigator.mediaDevices.enumerateDevices())
-                .filter(dev => dev.kind === "videoinput");
-  console.log("Cámaras detectadas:", cams);
-  if (!cams.length) {
-    alert("No se encontró ninguna cámara");
-    readerEl.style.display = "none";
-    return;
-  }
-
-  // 3) Instanciamos ZXing y arrancamos el escaneo en el div#reader
+  // Lanza ZXing
   const codeReader = new ZXing.BrowserMultiFormatReader();
   codeReader
-    .decodeFromVideoDevice(
-      /* deviceId null = default camera */ null,
-      "reader",
-      (result, err) => {
-        if (result) {
-          console.log("Código leído:", result.getText());
-          codeReader.reset();
+    .decodeFromVideoDevice(null, "reader", (result, err) => {
+      if (result) {
+        cont.classList.add("detected");
+        fb.textContent = "¡Código detectado!";
+        codeReader.reset();
+        setTimeout(() => {
+          cont.classList.remove("visible");
           readerEl.style.display = "none";
-          document.getElementById("dniInput").value = result.getText();
           buscarDni(result.getText());
-        }
-        // los errores de frame llegan aquí, los ignoramos
+        }, 300);
+      } else {
+        fb.textContent = "Buscando…";
       }
-    )
+    })
     .catch(scanErr => {
-      console.error("Error al iniciar ZXing:", scanErr);
-      alert("No se pudo arrancar el escáner: " + scanErr.message);
-      readerEl.style.display = "none";
+      cont.classList.add("error");
+      fb.textContent = "Error escáner";
+      console.error(scanErr);
+      setTimeout(()=>{
+        cont.classList.remove("visible");
+        readerEl.style.display = "none";
+      }, 500);
     });
 }
 
@@ -249,18 +247,18 @@ async function startDniScan() {
 // 4) Hook de botones y ENTER para DNI
 // —————————————————————————————————————————
 document.getElementById("btnActivateCam")
-  .addEventListener("click", startDniScan);
+        .addEventListener("click", startDniScan);
 
 document.getElementById("btnVerificarDni")
-  .addEventListener("click", () => {
-    const dni = document.getElementById("dniInput").value.trim();
-    if (dni) buscarDni(dni);
-  });
+        .addEventListener("click", () => {
+          const dni = document.getElementById("dniInput").value.trim();
+          if (dni) buscarDni(dni);
+        });
 
 document.getElementById("dniInput")
-  .addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const dni = e.target.value.trim();
-      if (dni) buscarDni(dni);
-    }
-  });
+        .addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            const dni = e.target.value.trim();
+            if (dni) buscarDni(dni);
+          }
+        });
