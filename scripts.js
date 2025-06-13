@@ -194,28 +194,45 @@ function buscarDni(dni) {
 // —————————————————————————————————————————
 // **NUEVO**: Función para activar cámara y escanear DNI
 // —————————————————————————————————————————
+// ——————————————————————————————————
+// Barcode/PDF417 con ZXing
+// ——————————————————————————————————
 function startDniScan() {
   const readerEl = document.getElementById("reader");
   readerEl.style.display = "block";
-  const scanner = new Html5Qrcode("reader");
-  const cfg = { fps: 10, qrbox: 250 };
 
-  scanner.start(
-    { facingMode: "environment" },
-    cfg,
-    decodedText => {
-      scanner.stop();
-      readerEl.style.display = "none";
-      document.getElementById("dniInput").value = decodedText;
-      buscarDni(decodedText);
-    },
-    error => {
-      // console.warn(error);
-    }
-  ).catch(err => {
-    console.error("Error iniciando cámara:", err);
-    alert("No se pudo activar la cámara");
-  });
+  // Creamos el lector multi‐formato
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+  // Escuchamos la primera cámara disponible
+  codeReader.getVideoInputDevices()
+    .then(videoInputDevices => {
+      const firstDeviceId = videoInputDevices[0]?.deviceId;
+      if (!firstDeviceId) throw new Error("No hay cámara disponible");
+
+      // Iniciamos streaming + decodificación continua
+      codeReader.decodeFromVideoDevice(
+        firstDeviceId,
+        "reader",
+        { 
+          // Opcional: puedes especificar solo PDF_417 y Code_128
+          formats: [ZXing.BarcodeFormat.PDF_417, ZXing.BarcodeFormat.CODE_128] 
+        },
+        (result, err) => {
+          if (result) {
+            // Tenemos el texto decodificado
+            codeReader.reset();
+            readerEl.style.display = "none";
+            document.getElementById("dniInput").value = result.getText();
+            buscarDni(result.getText());
+          }
+          // errores de frame ignoramos
+        }
+      );
+    })
+    .catch(err => {
+      console.error("ZXing error:", err);
+      alert("No se pudo iniciar el escáner de barras: " + err.message);
+    });
 }
 
 // —————————————————————————————————————————
