@@ -74,18 +74,23 @@
         <button id="btnVerificarDni">Verificar DNI</button>
         <button id="btnActivateCam">📷 Activar Cámara</button>
         <button class="btn-clear">Limpiar</button>
-       <!-- Área de escaneo -->
-<video id="reader"
-       style="display:none; width:300px; height:200px; margin:1rem auto;"
-       autoplay muted playsinline>
-</video>
+
+        <!-- Escáner -->
+        <div id="scanner-container">
+          <video id="reader" autoplay muted playsinline></video>
+          <div class="overlay"></div>
+          <div class="scan-area">
+            <div class="scan-line"></div>
+          </div>
+          <div id="scanFeedback" class="scan-feedback">Buscando…</div>
+        </div>
 
         <div id="resultadoDni"></div>
       </section>
     </div>
   </main>
 
-  <!-- Librería ZXing para escanear PDF417/barcodes de DNI -->
+  <!-- ZXing UMD bundle para escaneo -->
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
   <!-- Tu script principal -->
   <script src="scripts.js" defer></script>
