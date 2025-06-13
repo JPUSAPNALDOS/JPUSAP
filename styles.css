@@ -153,3 +153,17 @@ button:hover,
     background-color: #0066cc;
   }
 }
+/* ——— Área de escaneo DNI ——— */
+#reader {
+  border: 2px solid var(--clr-primary);
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+
+/* Resultado DNI */
+#resultadoDni {
+  margin-top: 1rem;
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+}
