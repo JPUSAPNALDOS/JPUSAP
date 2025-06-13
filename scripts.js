@@ -1,14 +1,36 @@
-const sheetId = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ"; // Verifica que este ID sea el correcto
-const sheetName = "VERIFICACION";
-const apiKey = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"; // Asegúrate de que sea una clave válida
+// ——— Spinner interceptor ———
+;(function(){
+  const spinner = document.getElementById('global-spinner');
+  const origFetch = window.fetch;
+  window.fetch = function(...args){
+    spinner.classList.add('show');
+    return origFetch.apply(this, args)
+      .finally(()=> spinner.classList.remove('show'));
+  };
+})();
 
-// Función para verificar por placa
+// ======== Configuración Google Sheets ========
+const sheetId   = "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ";
+const sheetName = "VERIFICACION";
+const apiKey    = "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE";
+
+// ——— Manejo de pestañas ———
+const tabs       = document.querySelectorAll('.tab');
+const contenidos = document.querySelectorAll('.contenido-tab');
+tabs.forEach(tab => tab.addEventListener('click', function(){
+  tabs.forEach(t => t.classList.remove('active'));
+  contenidos.forEach(c => c.classList.remove('active'));
+  this.classList.add('active');
+  document.getElementById(this.dataset.target).classList.add('active');
+}));
+
+// ——— Función para verificar por placa ———
 function verificarPlaca() {
-  const placaInput = document.getElementById("placaInput");
+  const placaInput   = document.getElementById("placaInput");
   const resultadoDiv = document.getElementById("resultado");
-  let placaIngresada = placaInput.value.trim().toUpperCase();
+  const placa        = placaInput.value.trim().toUpperCase();
   
-  if (placaIngresada === "") {
+  if (!placa) {
     resultadoDiv.textContent = "⚠️ Ingresa una placa válida.";
     resultadoDiv.style.color = "red";
     return;
@@ -17,132 +39,201 @@ function verificarPlaca() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
   fetch(url)
     .then(res => {
-      if (!res.ok) {
-        throw new Error(`Error en la API: ${res.status} - ${res.statusText}`);
-      }
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
       return res.json();
     })
     .then(data => {
-      if (!data.values || data.values.length === 0) {
-        throw new Error("No hay datos disponibles en la hoja.");
-      }
-      
+      if (!data.values || !data.values.length) throw new Error("Hoja vacía");
       const filas = data.values;
-      let estado = "NO ENCONTRADO";
-      let estadoCuenta = "SIN DATOS";
       
-      // Variables para los campos de deuda
-      let mz = "N/A";
-      let lote = "N/A";
-      let etapa = "N/A";
-      let mesesAdeudados = "0";
+      // Valores por defecto
+      let estado = "NO ENCONTRADO",
+          cuenta = "SIN DATOS",
+          mz = "", lote = "", etapa = "", meses = "";
       
-      // Recorremos las filas (se asume que la primera fila es el encabezado)
       for (let i = 1; i < filas.length; i++) {
-        if (filas[i][0] && filas[i][0].toUpperCase() === placaIngresada) {
-          estado = filas[i][1] ? filas[i][1].toUpperCase() : "SIN INFORMACIÓN";
-          estadoCuenta = filas[i][2] ? filas[i][2].toUpperCase() : "SIN ESTADO DE CUENTA";
-          mz = (filas[i].length > 3 && filas[i][3]) ? filas[i][3] : "N/A";
-          lote = (filas[i].length > 4 && filas[i][4]) ? filas[i][4] : "N/A";
-          etapa = (filas[i].length > 5 && filas[i][5]) ? filas[i][5] : "N/A";
-          mesesAdeudados = (filas[i].length > 6 && filas[i][6]) ? filas[i][6] : "0";
+        if (filas[i][0]?.toUpperCase() === placa) {
+          estado = filas[i][1]?.toUpperCase() || estado;
+          cuenta = filas[i][2]?.toUpperCase() || cuenta;
+          mz     = filas[i][3] || "";
+          lote   = filas[i][4] || "";
+          etapa  = filas[i][5] || "";
+          meses  = filas[i][6] || "";
           break;
         }
       }
       
-      // Actualiza la pestaña de Verificación (resultado original)
+      // Mostrar en “Verificación”
       resultadoDiv.innerHTML = `
         <span id="estadoSpan">🔍 Estado: ${estado}</span><br>
-        <span id="estadoCuentaSpan">💰 Estado de Cuenta: ${estadoCuenta}</span>
+        <span id="estadoCuentaSpan">💰 Estado de Cuenta: ${cuenta}</span>
       `;
+      document.getElementById("estadoSpan")
+              .style.color = (estado==="APORTANTE"?"green":estado==="NO APORTANTE"?"orange":"red");
+      document.getElementById("estadoCuentaSpan")
+              .style.color = (cuenta==="ESTABLE"?"green":cuenta==="RETRASO DE DEUDA"?"red":"black");
       
-      const estadoSpan = document.getElementById("estadoSpan");
-      const estadoCuentaSpan = document.getElementById("estadoCuentaSpan");
-      estadoSpan.style.color = (estado === "APORTANTE") ? "green" : (estado === "NO APORTANTE") ? "orange" : "red";
-      if (estadoCuenta === "ESTABLE") {
-        estadoCuentaSpan.style.color = "green";
-      } else if (estadoCuenta === "RETRASO DE DEUDA") {
-        estadoCuentaSpan.style.color = "red";
-      } else {
-        estadoCuentaSpan.style.color = "black";
-      }
-      
-      // Actualiza los inputs en la pestaña "Estado de Deuda" con los valores obtenidos
-      document.getElementById("mz").value = mz;
-      document.getElementById("lote").value = lote;
-      document.getElementById("etapa").value = etapa;
-      document.getElementById("mesesAdeudados").value = mesesAdeudados;
+      // Rellenar “Estado de Deuda”
+      document.getElementById("mz").value             = mz;
+      document.getElementById("lote").value           = lote;
+      document.getElementById("etapa").value          = etapa;
+      document.getElementById("mesesAdeudados").value = meses;
     })
     .catch(err => {
-      console.error("Error:", err);
-      resultadoDiv.textContent = `🚨 Error: ${err.message}`;
+      resultadoDiv.textContent = `🚨 ${err.message}`;
       resultadoDiv.style.color = "red";
     });
 }
 
-// Función independiente para verificar la deuda usando los campos Mz, Lote y Etapa
+// ——— Función para verificar deuda por Mz/Lote/Etapa ———
 function verificarDeuda() {
-  const mzInputValue = document.getElementById("mz").value.trim().toUpperCase();
-  const loteInputValue = document.getElementById("lote").value.trim().toUpperCase();
-  const etapaInputValue = document.getElementById("etapa").value.trim().toUpperCase();
-  const mesesInput = document.getElementById("mesesAdeudados");
+  const mzValue    = document.getElementById("mz").value.trim().toUpperCase();
+  const loteValue  = document.getElementById("lote").value.trim().toUpperCase();
+  const etapaValue = document.getElementById("etapa").value.trim().toUpperCase();
+  const out        = document.getElementById("mesesAdeudados");
   
-  if (mzInputValue === "" || loteInputValue === "" || etapaInputValue === "") {
-    mesesInput.value = "⚠️ Rellene Mz, Lote y Etapa.";
+  if (!mzValue || !loteValue || !etapaValue) {
+    out.value = "⚠️ Rellene Mz, Lote y Etapa.";
     return;
   }
   
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
   fetch(url)
     .then(res => {
-      if (!res.ok) {
-        throw new Error(`Error en la API: ${res.status} - ${res.statusText}`);
-      }
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
       return res.json();
     })
     .then(data => {
-      if (!data.values || data.values.length === 0) {
-        throw new Error("No hay datos disponibles en la hoja.");
-      }
-      
+      if (!data.values || !data.values.length) throw new Error("Hoja vacía");
       const filas = data.values;
-      let mesesAdeudadosResult = "NO ENCONTRADO";
+      let encontrado = "NO ENCONTRADO";
       
       for (let i = 1; i < filas.length; i++) {
-        if (
-          filas[i].length >= 7 &&
-          filas[i][3] && filas[i][3].toUpperCase() === mzInputValue &&
-          filas[i][4] && filas[i][4].toUpperCase() === loteInputValue &&
-          filas[i][5] && filas[i][5].toUpperCase() === etapaInputValue
-        ) {
-          mesesAdeudadosResult = filas[i][6] ? filas[i][6] : "0";
+        const row = filas[i];
+        if (row[3]?.toUpperCase()===mzValue &&
+            row[4]?.toUpperCase()===loteValue &&
+            row[5]?.toUpperCase()===etapaValue) {
+          encontrado = row[6]||"0";
           break;
         }
       }
-      
-      mesesInput.value = mesesAdeudadosResult;
+      out.value = encontrado;
     })
     .catch(err => {
-      console.error("Error:", err);
-      mesesInput.value = `🚨 Error: ${err.message}`;
+      out.value = `🚨 ${err.message}`;
     });
 }
 
-// ---
-// Agregar soporte para el botón ENTER
-
-// Para la verificación por placa
-document.getElementById("placaInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    verificarPlaca();
-  }
+// ——— Soporte ENTER para placa y deuda ———
+document.getElementById("placaInput")
+        .addEventListener("keydown", e => e.key==="Enter" && verificarPlaca());
+["mz","lote","etapa"].forEach(id => {
+  document.getElementById(id)
+          .addEventListener("keydown", e => e.key==="Enter" && verificarDeuda());
 });
 
-// Para la pestaña de Estado de Deuda: si se pulsa Enter en cualquiera de los inputs de Mz, Lote o Etapa, se activa la verificación de deuda.
-["mz", "lote", "etapa"].forEach(id => {
-  document.getElementById(id).addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      verificarDeuda();
-    }
+// ——— Plugin “Limpiar” ———
+document.querySelectorAll('.btn-clear').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const panel = btn.closest('section, .contenido-tab');
+    if (!panel) return;
+    panel.querySelectorAll('input').forEach(i => i.value = '');
+    document.getElementById('resultado').textContent = '';
   });
 });
+
+// —————————————————————————————————————————
+// 1) Config para la nueva hoja de DNI
+// —————————————————————————————————————————
+const dniSheetName = "RESIDENTES";    // nombre exacto de la pestaña con DNI|Residente|Aportante
+
+// —————————————————————————————————————————
+// 2) Función que consulta SEL DNI (hoja RESIDENTES)
+// —————————————————————————————————————————
+function buscarDni(dni) {
+  const resDiv = document.getElementById("resultadoDni");
+  resDiv.textContent = "Buscando…";
+  
+  fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${dniSheetName}?key=${apiKey}`
+  )
+    .then(r => {
+      if (!r.ok) throw new Error(r.statusText);
+      return r.json();
+    })
+    .then(data => {
+      const values = data.values || [];
+      const fila = values.find((row, i) => i > 0 && row[0] === dni);
+      
+      if (!fila) {
+        resDiv.innerHTML = `<span style="color:orange">❓ DNI no encontrado</span>`;
+        return;
+      }
+      
+      // Lectura de columnas: [0]=DNI, [1]=Residente, [2]=Aportante
+      const esResidente  = (fila[1]||"").toUpperCase() === "SI";
+      const esAportante  = (fila[2]||"").toUpperCase() === "SI";
+      
+      // Mostrar resultado
+      resDiv.innerHTML = `
+        <span style="color:${esResidente?"green":"red"}">
+          ${ esResidente ? "✅ Es residente" : "❌ No es residente" }
+        </span><br>
+        <span style="color:${esAportante?"green":"red"}">
+          ${ esAportante ? "✅ Es aportante" : "❌ No es aportante" }
+        </span>
+      `;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById("resultadoDni")
+              .innerHTML = `<span style="color:red">🚨 ${err.message}</span>`;
+    });
+}
+
+// —————————————————————————————————————————
+// **NUEVO**: Función para activar cámara y escanear DNI
+// —————————————————————————————————————————
+function startDniScan() {
+  const readerEl = document.getElementById("reader");
+  readerEl.style.display = "block";
+  const scanner = new Html5Qrcode("reader");
+  const cfg = { fps: 10, qrbox: 250 };
+
+  scanner.start(
+    { facingMode: "environment" },
+    cfg,
+    decodedText => {
+      scanner.stop();
+      readerEl.style.display = "none";
+      document.getElementById("dniInput").value = decodedText;
+      buscarDni(decodedText);
+    },
+    error => {
+      // console.warn(error);
+    }
+  ).catch(err => {
+    console.error("Error iniciando cámara:", err);
+    alert("No se pudo activar la cámara");
+  });
+}
+
+// —————————————————————————————————————————
+// 4) Hook de botones y ENTER para DNI
+// —————————————————————————————————————————
+document.getElementById("btnActivateCam")
+  .addEventListener("click", startDniScan);
+
+document.getElementById("btnVerificarDni")
+  .addEventListener("click", () => {
+    const dni = document.getElementById("dniInput").value.trim();
+    if (dni) buscarDni(dni);
+  });
+
+document.getElementById("dniInput")
+  .addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const dni = e.target.value.trim();
+      if (dni) buscarDni(dni);
+    }
+  });
