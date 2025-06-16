@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Verificación de Aportante</title>
   <link rel="stylesheet" href="styles.css"/>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 </head>
 <body>
   <main class="contenedor">
@@ -20,86 +17,81 @@
         class="tab active"
         role="tab"
         aria-selected="true"
+        id="tab-verificacion"
+        aria-controls="panel-verificacion"
         data-target="verificacion"
+        type="button"
       >Verificación de placa</button>
       <button
         class="tab"
         role="tab"
         aria-selected="false"
+        id="tab-estado"
+        aria-controls="panel-estadoDeuda"
         data-target="estadoDeuda"
+        type="button"
       >Estado de Deuda</button>
       <button
         class="tab"
         role="tab"
         aria-selected="false"
+        id="tab-dni"
+        aria-controls="panel-verificacionDni"
         data-target="verificacionDni"
+        type="button"
       >Verificación DNI</button>
     </div>
 
     <!-- Contenido de las pestañas -->
     <div class="tab-content">
       <!-- Pestaña Verificación de placa -->
-      <section id="verificacion" class="contenido-tab active" role="tabpanel">
+      <section id="verificacion" class="contenido-tab active" role="tabpanel" aria-labelledby="tab-verificacion">
         <input type="text" id="placaInput" placeholder="Digita la placa"/>
-        <button onclick="verificarPlaca()">
+        <button type="button" id="btnVerificarPlaca">
           <i class="fas fa-search"></i> Verificar
         </button>
-        <button class="btn-clear">Limpiar</button>
-        <div id="resultado"></div>
+        <button type="button" class="btn-clear">Limpiar</button>
+        <div id="resultado" aria-live="polite"></div>
       </section>
 
       <!-- Pestaña Estado de Deuda -->
-      <section id="estadoDeuda" class="contenido-tab" role="tabpanel" hidden>
+      <section id="estadoDeuda" class="contenido-tab" role="tabpanel" aria-labelledby="tab-estado">
         <h2>Estado de Deuda</h2>
         <p>Mz:   <input type="text" id="mz" placeholder="Ingrese Mz"/></p>
         <p>Lote: <input type="text" id="lote" placeholder="Ingrese Lote"/></p>
         <p>Etapa:<input type="text" id="etapa" placeholder="Ingrese Etapa"/></p>
         <p>
           Meses Adeudados:
-          <input
-            type="text"
-            id="mesesAdeudados"
-            placeholder="Meses Adeudados"
-            readonly
-          />
+          <input type="text" id="mesesAdeudados" placeholder="Meses Adeudados" readonly />
         </p>
-        <button onclick="verificarDeuda()">Verificar Deuda</button>
-        <button class="btn-clear">Limpiar</button>
+        <button type="button" id="btnVerificarDeuda">Verificar Deuda</button>
+        <button type="button" class="btn-clear">Limpiar</button>
       </section>
 
       <!-- Pestaña Verificación DNI -->
-      <section id="verificacionDni" class="contenido-tab" role="tabpanel" hidden>
+      <section id="verificacionDni" class="contenido-tab" role="tabpanel" aria-labelledby="tab-dni">
         <h2>Verificación por DNI</h2>
         <input type="text" id="dniInput" placeholder="Digita número de DNI"/>
-        <button id="btnVerificarDni">Verificar DNI</button>
-        <button id="btnActivateCam">📷 Activar Cámara</button>
-        <button class="btn-clear">Limpiar</button>
-
-        <!-- Escáner -->
-        <div id="scanner-container">
-          <video id="reader" autoplay muted playsinline></video>
-          <div class="overlay"></div>
-          <div class="scan-area">
-            <div class="scan-line"></div>
-          </div>
-          <div id="scanFeedback" class="scan-feedback">Buscando…</div>
-        </div>
-
-        <div id="resultadoDni"></div>
+        <button type="button" id="btnVerificarDni">Verificar DNI</button>
+        <button type="button" id="btnActivateCam">📷 Activar Cámara</button>
+        <button type="button" class="btn-clear">Limpiar</button>
+        <!-- Área de escaneo -->
+        <video id="reader" style="display:none; width:300px; height:200px; margin:1rem auto;" autoplay muted playsinline></video>
+        <div id="resultadoDni" aria-live="polite"></div>
       </section>
     </div>
   </main>
 
-  <!-- ZXing UMD bundle para escaneo -->
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
-  <!-- Tu script principal -->
-  <script src="scripts.js" defer></script>
-
-  <!-- Spinner overlay -->
-  <div id="global-spinner">
+  <!-- Spinner overlay accesible -->
+  <div id="global-spinner" aria-live="polite" aria-busy="true" style="display:none;">
+    <span class="sr-only">Cargando…</span>
     <div class="dot"></div>
     <div class="dot"></div>
     <div class="dot"></div>
   </div>
+
+  <!-- ZXing y JS principal -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
+  <script src="scripts.js" defer></script>
 </body>
 </html>
