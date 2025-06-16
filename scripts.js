@@ -1,4 +1,4 @@
-// Spinner Interceptor mejorado
+// =========== Spinner Interceptor Global ===========
 (function(){
   const spinner = document.getElementById('global-spinner');
   const origFetch = window.fetch;
@@ -9,14 +9,14 @@
   };
 })();
 
-// --- Configuración Google Sheets ---
+// =========== Configuración Google Sheets ===========
 const config = {
   sheetId: "1T8EncGlUe0X20Carupv8vRNhxYz_jGYJlj_s_5nITsQ",
   apiKey: "AIzaSyBbQqXlcuEkflDUVOQtXHCJN_HMiFQHhmE"
 };
 const SHEET_URL = (sheet) => `https://sheets.googleapis.com/v4/spreadsheets/${config.sheetId}/values/${sheet}?key=${config.apiKey}`;
 
-// --- Utilidad fetch para obtener filas ---
+// =========== Utilidad fetch para obtener filas ===========
 async function getSheetRows(sheetName) {
   const res = await fetch(SHEET_URL(sheetName));
   if (!res.ok) throw new Error(res.statusText);
@@ -24,10 +24,9 @@ async function getSheetRows(sheetName) {
   return data.values || [];
 }
 
-// --- Tabs mejorados ---
+// =========== Manejo de pestañas ===========
 const tabs = document.querySelectorAll('.tab');
 const contenidos = document.querySelectorAll('.contenido-tab');
-
 tabs.forEach(tab => tab.addEventListener('click', function(){
   tabs.forEach(t => {
     t.classList.remove('active');
@@ -50,7 +49,7 @@ tabs.forEach(tab => tab.addEventListener('click', function(){
   }
 }));
 
-// --- Verificación de placa ---
+// =========== Verificación de placa ===========
 async function verificarPlaca() {
   const placaInput = document.getElementById("placaInput");
   const resultadoDiv = document.getElementById("resultado");
@@ -94,7 +93,7 @@ async function verificarPlaca() {
   }
 }
 
-// --- Verificar Deuda ---
+// =========== Verificar Deuda ===========
 async function verificarDeuda() {
   const mzValue    = document.getElementById("mz").value.trim().toUpperCase();
   const loteValue  = document.getElementById("lote").value.trim().toUpperCase();
@@ -122,29 +121,32 @@ async function verificarDeuda() {
   }
 }
 
-// --- Soporte ENTER para placa y deuda ---
+// =========== Soporte ENTER para placa y deuda ===========
 document.getElementById("placaInput").addEventListener("keydown", e => e.key==="Enter" && verificarPlaca());
 ["mz","lote","etapa"].forEach(id => {
   document.getElementById(id).addEventListener("keydown", e => e.key==="Enter" && verificarDeuda());
 });
 
-// --- Plugin “Limpiar” universal ---
+// =========== Plugin “Limpiar” universal ===========
 document.querySelectorAll('.btn-clear').forEach(btn => {
   btn.addEventListener('click', () => {
     const panel = btn.closest('section, .contenido-tab');
     if (!panel) return;
     panel.querySelectorAll('input').forEach(i => { if(i.type!=='button' && !i.hasAttribute('readonly')) i.value = ''; });
     panel.querySelectorAll('div[aria-live]').forEach(d => d.textContent = '');
-    // Esconde video si está en panel DNI
+    // Detener escaneo y ocultar cámara
+    if (typeof codeReaderInstance?.reset === "function") {
+      try { codeReaderInstance.reset(); } catch(e){}
+    }
     const reader = panel.querySelector('#reader');
     if(reader) reader.style.display = 'none';
   });
 });
 
-// --- Config hoja de DNI ---
+// =========== Config hoja de DNI ===========
 const dniSheetName = "RESIDENTES";
 
-// --- Buscar DNI ---
+// =========== Buscar DNI ===========
 async function buscarDni(dni) {
   const resDiv = document.getElementById("resultadoDni");
   resDiv.textContent = "Buscando…";
@@ -170,41 +172,66 @@ async function buscarDni(dni) {
   }
 }
 
-// --- Escanear DNI (ZXing) ---
+// =========== Escanear DNI peruano (ZXing/PDF417) ===========
+let codeReaderInstance = null;
+
 async function startDniScan() {
   const readerEl = document.getElementById("reader");
+  const resultadoDiv = document.getElementById("resultadoDni");
   readerEl.style.display = "block";
+  resultadoDiv.innerHTML = '<span style="color:#06c">📷 Escaneando… Apunta el código PDF417 del reverso del DNI peruano</span>';
+
+  // 1. Pedir permiso a la cámara
   try {
-    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
   } catch (permErr) {
-    alert("No permitiste acceso a cámara");
+    resultadoDiv.innerHTML = `<span style="color:red">🚨 No permitiste acceso a cámara</span>`;
     readerEl.style.display = "none";
     return;
   }
-  const cams = (await navigator.mediaDevices.enumerateDevices())
-                .filter(dev => dev.kind === "videoinput");
-  if (!cams.length) {
-    alert("No se encontró ninguna cámara");
-    readerEl.style.display = "none";
-    return;
+
+  // 2. Instanciar ZXing y limitar a PDF417
+  if (!codeReaderInstance) {
+    codeReaderInstance = new ZXing.BrowserMultiFormatReader();
   }
-  const codeReader = new ZXing.BrowserMultiFormatReader();
-  codeReader
-    .decodeFromVideoDevice(null, "reader", (result, err) => {
-      if (result) {
-        codeReader.reset();
-        readerEl.style.display = "none";
-        document.getElementById("dniInput").value = result.getText();
-        buscarDni(result.getText());
-      }
-    })
-    .catch(scanErr => {
-      alert("No se pudo arrancar el escáner: " + scanErr.message);
-      readerEl.style.display = "none";
-    });
+  try { codeReaderInstance.reset(); } catch(e){}
+
+  // 3. Arrancar escaneo SOLO PDF417
+  try {
+    await codeReaderInstance.decodeFromVideoDevice(
+      null, // deviceId
+      "reader",
+      (result, err) => {
+        if (result) {
+          codeReaderInstance.reset();
+          readerEl.style.display = "none";
+          let raw = result.getText().trim();
+          // --- EXTRACCIÓN ESPECÍFICA PARA DNI PERUANO ---
+          let dniMatch = raw.match(/\b\d{8}\b/);
+          if (dniMatch) {
+            let dni = dniMatch[0];
+            document.getElementById("dniInput").value = dni;
+            resultadoDiv.innerHTML = '<span style="color:green">✅ DNI detectado: ' + dni + '</span>';
+            buscarDni(dni);
+          } else {
+            resultadoDiv.innerHTML = `<span style="color:orange">⚠️ Escaneado, pero no se encontró un número de DNI (8 dígitos) en el código.<br>Texto leído:<br><small>${raw.slice(0, 200)}...</small></span>`;
+            // Puedes ver en consola el texto completo
+            console.log("Texto escaneado:", raw);
+          }
+        } else if (err && !(err instanceof ZXing.NotFoundException)) {
+          resultadoDiv.innerHTML = `<span style="color:red">🚨 Error: ${err.message}</span>`;
+        }
+        // Si es NotFoundException, sigue intentando (no mostrar nada)
+      },
+      [ZXing.BarcodeFormat.PDF_417] // SOLO PDF417, mucho más rápido y preciso
+    );
+  } catch (scanErr) {
+    resultadoDiv.innerHTML = `<span style="color:red">🚨 No se pudo arrancar el escáner: ${scanErr.message}</span>`;
+    readerEl.style.display = "none";
+  }
 }
 
-// --- Botones y ENTER para DNI ---
+// =========== Botones y ENTER para DNI ===========
 document.getElementById("btnActivateCam").addEventListener("click", startDniScan);
 document.getElementById("btnVerificarDni").addEventListener("click", () => {
   const dni = document.getElementById("dniInput").value.trim();
@@ -217,6 +244,6 @@ document.getElementById("dniInput").addEventListener("keydown", (e) => {
   }
 });
 
-// --- Botón verificar de placa y deuda ---
+// =========== Botón verificar de placa y deuda ===========
 document.getElementById("btnVerificarPlaca").addEventListener("click", verificarPlaca);
 document.getElementById("btnVerificarDeuda").addEventListener("click", verificarDeuda);
