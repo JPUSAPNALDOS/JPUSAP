@@ -143,10 +143,8 @@ document.querySelectorAll('.btn-clear').forEach(btn => {
   });
 });
 
-// =========== Config hoja de DNI ===========
+// =========== Buscar DNI contra hoja Google ===========
 const dniSheetName = "RESIDENTES";
-
-// =========== Buscar DNI ===========
 async function buscarDni(dni) {
   const resDiv = document.getElementById("resultadoDni");
   resDiv.textContent = "Buscando…";
@@ -154,12 +152,13 @@ async function buscarDni(dni) {
     const values = await getSheetRows(dniSheetName);
     const fila = values.find((row, i) => i > 0 && row[0] === dni);
     if (!fila) {
-      resDiv.innerHTML = `<span style="color:orange">❓ DNI no encontrado</span>`;
+      resDiv.innerHTML += `<br><span style="color:orange">❓ DNI no encontrado en base</span>`;
       return;
     }
     const esResidente = (fila[1]||"").toUpperCase() === "SI";
     const esAportante = (fila[2]||"").toUpperCase() === "SI";
-    resDiv.innerHTML = `
+    resDiv.innerHTML += `
+      <br>
       <span style="color:${esResidente?"green":"red"}">
         ${ esResidente ? "✅ Es residente" : "❌ No es residente" }
       </span><br>
@@ -168,13 +167,37 @@ async function buscarDni(dni) {
       </span>
     `;
   } catch (err) {
-    resDiv.innerHTML = `<span style="color:red">🚨 ${err.message}</span>`;
+    resDiv.innerHTML += `<br><span style="color:red">🚨 ${err.message}</span>`;
   }
+}
+
+// =========== Función para extraer nombre y apellidos ===========
+function extraerNombreYApellidos(raw) {
+  // Caso 1: Separado por @
+  if (raw.includes("@")) {
+    let parts = raw.split("@");
+    if (parts.length > 3) {
+      let apellidoPaterno = parts[1].trim();
+      let apellidoMaterno = parts[2].trim();
+      let nombres = parts[3].trim();
+      return { apellidoPaterno, apellidoMaterno, nombres };
+    }
+  }
+  // Caso 2: Pegado (ajusta según tu formato real)
+  let match = raw.match(/\d{8}([A-Z\s]+)[A-Z]+\s+[A-Z]+\s+[A-Z\s]+/);
+  if (match) {
+    let arr = match[1].trim().split(/\s+/);
+    return {
+      apellidoPaterno: arr[0] || "",
+      apellidoMaterno: arr[1] || "",
+      nombres: arr.slice(2).join(" ") || ""
+    }
+  }
+  return null;
 }
 
 // =========== Escanear DNI peruano (ZXing/PDF417) ===========
 let codeReaderInstance = null;
-
 async function startDniScan() {
   const readerEl = document.getElementById("reader");
   const resultadoDiv = document.getElementById("resultadoDni");
@@ -206,24 +229,46 @@ async function startDniScan() {
           codeReaderInstance.reset();
           readerEl.style.display = "none";
           let raw = result.getText().trim();
-          // --- EXTRACCIÓN ESPECÍFICA PARA DNI PERUANO ---
+
+          // Extraer DNI (primer grupo de 8 dígitos)
           let dniMatch = raw.match(/\b\d{8}\b/);
-          if (dniMatch) {
-            let dni = dniMatch[0];
+          let dni = dniMatch ? dniMatch[0] : "";
+
+          // Extraer nombre y apellidos usando la función anterior
+          let datos = extraerNombreYApellidos(raw);
+
+          if (dni && datos) {
+            resultadoDiv.innerHTML = `
+              <span style="color:green">
+                ✅ <b>${datos.nombres} ${datos.apellidoPaterno} ${datos.apellidoMaterno}</b><br>
+                DNI: <b>${dni}</b>
+              </span>
+            `;
             document.getElementById("dniInput").value = dni;
-            resultadoDiv.innerHTML = '<span style="color:green">✅ DNI detectado: ' + dni + '</span>';
+            buscarDni(dni);
+          } else if (dni) {
+            resultadoDiv.innerHTML = `
+              <span style="color:orange">
+                ⚠️ DNI detectado: ${dni}<br>
+                No se pudieron extraer nombre y apellidos.<br>
+                <small>${raw.slice(0, 200)}...</small>
+              </span>
+            `;
+            document.getElementById("dniInput").value = dni;
             buscarDni(dni);
           } else {
-            resultadoDiv.innerHTML = `<span style="color:orange">⚠️ Escaneado, pero no se encontró un número de DNI (8 dígitos) en el código.<br>Texto leído:<br><small>${raw.slice(0, 200)}...</small></span>`;
-            // Puedes ver en consola el texto completo
-            console.log("Texto escaneado:", raw);
+            resultadoDiv.innerHTML = `
+              <span style="color:orange">
+                ⚠️ Escaneado, pero no se encontró un número de DNI (8 dígitos) ni nombre.<br>
+                <small>${raw.slice(0, 200)}...</small>
+              </span>
+            `;
           }
         } else if (err && !(err instanceof ZXing.NotFoundException)) {
           resultadoDiv.innerHTML = `<span style="color:red">🚨 Error: ${err.message}</span>`;
         }
-        // Si es NotFoundException, sigue intentando (no mostrar nada)
       },
-      [ZXing.BarcodeFormat.PDF_417] // SOLO PDF417, mucho más rápido y preciso
+      [ZXing.BarcodeFormat.PDF_417]
     );
   } catch (scanErr) {
     resultadoDiv.innerHTML = `<span style="color:red">🚨 No se pudo arrancar el escáner: ${scanErr.message}</span>`;
